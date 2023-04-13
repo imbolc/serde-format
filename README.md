@@ -6,7 +6,38 @@
 
 # serde-format
 
-A tiny trait to format a serializable struct using custom placeholders
+A tiny trait to format a serializable struct using custom placeholders.
+
+## Goals
+
+- Be as lightweight as possible
+- Have no dependencies other than [serde] and [serde_json]
+
+## Non-goals
+
+- Prioritize performance
+- Support any syntax beyond variable substitution
+
+## Usage
+
+```rust
+use serde::Serialize;
+use serde_format::Format;
+
+#[derive(Serialize)]
+struct Foo {
+    name: String
+}
+
+impl Format for Foo {}
+
+let foo = Foo { name: "Bar".into() };
+assert_eq!(foo.format("Hey, {{name}}!").unwrap(), "Hey, Bar!");
+```
+
+## TODO
+
+- [ ] A derive macro
 
 <!-- cargo-sync-readme end -->
 
