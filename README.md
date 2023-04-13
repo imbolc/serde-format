@@ -32,12 +32,8 @@ struct Foo {
 impl Format for Foo {}
 
 let foo = Foo { name: "Bar".into() };
-assert_eq!(foo.format("Hey, {{name}}!").unwrap(), "Hey, Bar!");
+assert_eq!(foo.format("Hey, {{name}}!"), "Hey, Bar!");
 ```
-
-## TODO
-
-- [ ] A derive macro
 
 <!-- cargo-sync-readme end -->
 

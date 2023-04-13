@@ -26,32 +26,14 @@
 //! impl Format for Foo {}
 //!
 //! let foo = Foo { name: "Bar".into() };
-//! assert_eq!(foo.format("Hey, {{name}}!").unwrap(), "Hey, Bar!");
+//! assert_eq!(foo.format("Hey, {{name}}!"), "Hey, Bar!");
 //! ```
-//!
-//! ## TODO
-//!
-//! - [ ] A derive macro
 
 #![warn(clippy::all, missing_docs, nonstandard_style, future_incompatible)]
 
-use displaydoc::Display;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use thiserror::Error;
-
-/// Error
-#[derive(Debug, Display, Error)]
-pub enum Error {
-    /// absent variable `{0}`
-    NoVar(String),
-    /// serde_json
-    SerdeJson(#[from] serde_json::Error),
-}
-
-/// Result
-pub type Result<T> = std::result::Result<T, Error>;
 
 /// A simple formatter with customizable placeholders
 pub trait Format {
@@ -59,18 +41,17 @@ pub trait Format {
     const PLACEHOLDERS: (&'static str, &'static str) = ("{{", "}}");
 
     /// Formats the struct using the template
-    fn format(&self, template: impl Into<String>) -> Result<String>
+    fn format(&self, template: impl Into<String>) -> String
     where
         Self: Serialize,
     {
         let mut result = template.into();
-        let data_map: HashMap<String, Value> = serde_json::from_value(serde_json::to_value(self)?)?;
+        let data_map: HashMap<String, Value> =
+            serde_json::from_value(serde_json::to_value(self).unwrap_or_default())
+                .unwrap_or_default();
         let (left, right) = Self::PLACEHOLDERS;
         for (key, value) in data_map.iter() {
             let placeholder = format!("{left}{key}{right}");
-            if !result.contains(&placeholder) {
-                return Err(Error::NoVar(key.into()));
-            }
             result = result.replace(
                 &placeholder,
                 &value
@@ -79,7 +60,7 @@ pub trait Format {
                     .unwrap_or_else(|| value.to_string()),
             );
         }
-        Ok(result)
+        result
     }
 }
 
@@ -104,14 +85,7 @@ mod tests {
             b: true,
         };
 
-        assert_eq!(
-            foo.format("s={{s}} n={{n}} b={{b}}").unwrap(),
-            "s=hey n=1 b=true"
-        );
-        assert_eq!(
-            foo.format("s={{s}} n={{n}}").err().unwrap().to_string(),
-            "absent variable `b`"
-        );
+        assert_eq!(foo.format("s={{s}} n={{n}} b={{b}}"), "s=hey n=1 b=true");
     }
 
     #[test]
@@ -133,13 +107,6 @@ mod tests {
             b: true,
         };
 
-        assert_eq!(
-            foo.format("s=${s} n=${n} b=${b}").unwrap(),
-            "s=hey n=1 b=true"
-        );
-        assert_eq!(
-            foo.format("s=${s} n=${n}").err().unwrap().to_string(),
-            "absent variable `b`"
-        );
+        assert_eq!(foo.format("s=${s} n=${n} b=${b}"), "s=hey n=1 b=true");
     }
 }
