@@ -1,0 +1,12 @@
+[package]
+description = "A tiny trait to format a serializable struct using custom placeholders"
+edition = "2021"
+license = "MIT"
+name = "serde-format"
+repository = "https://github.com/imbolc/serde-format"
+version = "0.1.0"
+
+[dependencies]
+
+[dev-dependencies]
+rusty-hook = "0.11"
